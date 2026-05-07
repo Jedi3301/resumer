@@ -23,7 +23,7 @@ def get_gemini_model():
         if not api_key:
             raise ValueError("GEMINI_API_KEY not set")
         genai.configure(api_key=api_key)
-        _gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+        _gemini_model = genai.GenerativeModel('gemini-2.5-flash')
     return _gemini_model
 
 def call_llm_with_retry(system_prompt: str, user_prompt: str = "") -> dict:
@@ -36,7 +36,7 @@ def call_llm_with_retry(system_prompt: str, user_prompt: str = "") -> dict:
     try:
         client = get_groq_client()
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=0.1,
             max_tokens=2000,
@@ -51,7 +51,7 @@ def call_llm_with_retry(system_prompt: str, user_prompt: str = "") -> dict:
             messages.append({"role": "user", "content": "Return ONLY raw JSON, your previous response was invalid."})
             
             response2 = client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model="llama-3.3-70b-versatile",
                 messages=messages,
                 temperature=0.1,
                 max_tokens=2000,

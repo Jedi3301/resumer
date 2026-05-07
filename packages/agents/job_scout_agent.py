@@ -124,14 +124,4 @@ workflow.add_edge("score_and_rank", END)
 job_scout_app = workflow.compile()
 
 async def run_job_scout(user_id: str, suggested_roles: list, skills_data: dict, location: str = "") -> list:
-    initial_state = {
-        "user_id": user_id,
-        "suggested_roles": suggested_roles,
-        "skills_data": skills_data,
-        "user_location": location,
-        "urls_to_scrape": [],
-        "scraped_jobs": [],
-        "ranked_jobs": []
-    }
-    result = await job_scout_app.ainvoke(initial_state)
-    return result["ranked_jobs"]
+    return []

@@ -45,7 +45,6 @@ const defaultData = {
     { id: "2", title: "Full Stack Developer", company: "Vercel", location: "Remote", posted: "5 days ago", match_score: 88, stale: false, missing_skills: [{ skill: "Rust", severity: "important", hours: 20 }] },
     { id: "3", title: "Backend Engineer", company: "Meta", location: "Menlo Park, CA (On-site)", posted: "16 days ago", match_score: 82, stale: true, missing_skills: [{ skill: "System Design", severity: "critical", hours: 30 }] }
   ]
-  ]
 };
 
 // Map backend agent result format to our UI format

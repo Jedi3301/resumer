@@ -8,7 +8,6 @@ import redis
 from celery.result import AsyncResult
 from celery_app import celery_app
 from tasks import process_resume_pipeline
-from services.gap_analyzer import analyze_gap, generate_battle_plan
 from pydantic import BaseModel
 import asyncio
 from services.redis_url import get_redis_url
@@ -88,15 +87,10 @@ async def stream_task_status(task_id: str):
 
 @app.get("/api/jobs/{user_id}")
 async def get_jobs(user_id: str):
-    redis_url = get_redis_url()
-    try:
-        r = redis.from_url(redis_url)
-        data = r.get(f"jobs:{user_id}")
-        if data:
-            return build_response(success=True, data={"jobs": json.loads(data)})
-        return build_response(success=True, data={"jobs": []})
-    except Exception as e:
-        return build_response(success=False, error=str(e))
+    return build_response(
+        success=True,
+        data={"jobs": [], "recommender_disabled": True}
+    )
 
 class GapRequest(BaseModel):
     resume_skills: list[str]
@@ -105,10 +99,10 @@ class GapRequest(BaseModel):
 
 @app.post("/api/jobs/gap/{job_id}")
 async def get_job_gap(job_id: str, req: GapRequest):
-    gap = analyze_gap(req.resume_skills, req.jd_text, req.job_title)
-    battle_plan = generate_battle_plan(gap.get("missing_skills", []))
-    
-    return build_response(success=True, data={
-        "gap_analysis": gap,
-        "battle_plan": battle_plan
-    })
+    return build_response(
+        success=True,
+        data={
+            "disabled": True,
+            "message": "Job recommender and gap analysis are temporarily disabled."
+        }
+    )
