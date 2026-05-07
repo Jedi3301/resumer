@@ -5,13 +5,13 @@ from datetime import datetime
 import pytz
 import json
 import redis
-import os
 from celery.result import AsyncResult
 from celery_app import celery_app
 from tasks import process_resume_pipeline
 from services.gap_analyzer import analyze_gap, generate_battle_plan
 from pydantic import BaseModel
 import asyncio
+from services.redis_url import get_redis_url
 
 app = FastAPI(title="Job Hunt Copilot API", version="0.1.0")
 
@@ -88,7 +88,7 @@ async def stream_task_status(task_id: str):
 
 @app.get("/api/jobs/{user_id}")
 async def get_jobs(user_id: str):
-    redis_url = os.getenv("UPSTASH_REDIS_URL", "redis://redis:6379/0")
+    redis_url = get_redis_url()
     try:
         r = redis.from_url(redis_url)
         data = r.get(f"jobs:{user_id}")

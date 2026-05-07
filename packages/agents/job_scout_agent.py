@@ -12,6 +12,7 @@ import uuid
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../apps/api'))
 from services.embeddings import get_embedding, compute_similarity, add_job_embedding
 from services.scraper import scrape_job_page
+from services.redis_url import get_redis_url
 
 class JobScoutState(TypedDict):
     user_id: str
@@ -102,7 +103,7 @@ def score_and_rank(state: JobScoutState):
     ranked_jobs.sort(key=lambda x: x["match_score"], reverse=True)
     top_20 = ranked_jobs[:20]
     
-    redis_url = os.getenv("UPSTASH_REDIS_URL", "redis://localhost:6379/0")
+    redis_url = get_redis_url("redis://localhost:6379/0")
     try:
         r = redis.from_url(redis_url)
         r.setex(f"jobs:{state['user_id']}", 86400, json.dumps(top_20))
