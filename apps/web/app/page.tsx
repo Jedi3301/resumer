@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, CheckCircle, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+
 export default function Home() {
   const router = useRouter();
   
@@ -43,8 +44,43 @@ export default function Home() {
     if (step < 4) setStep(step + 1);
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleAnalyze = async () => {
-    router.push("/processing");
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      if (file) {
+        formData.append("file", file);
+      } else if (pastedText.trim()) {
+        const textBlob = new Blob([pastedText], { type: "text/plain" });
+        formData.append("file", textBlob, "pasted_resume.txt");
+      } else {
+        return;
+      }
+      
+      const userId = "demo-user"; // hardcoded for now
+      formData.append("user_id", userId);
+      formData.append("goal_profile", JSON.stringify(profile));
+
+      const res = await fetch("http://localhost:8000/api/resume/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.data?.task_id) {
+        router.push(`/processing?taskId=${data.data.task_id}&userId=${userId}`);
+      } else {
+        console.error("Upload failed", data);
+        alert("Failed to start analysis. Is the backend running?");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error connecting to backend. Is it running on port 8000?");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const renderQuestion = () => {
@@ -227,9 +263,9 @@ export default function Home() {
           <button 
             onClick={handleAnalyze}
             className="w-full h-12 bg-gradient-to-r from-accent to-accent-dark rounded-xl font-medium text-white shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_30px_rgba(124,58,237,0.5)] transition-shadow flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
-            disabled={!file && !pastedText.trim()}
+            disabled={(!file && !pastedText.trim()) || isUploading}
           >
-            Analyze my resume <ArrowRight className="w-5 h-5" />
+            {isUploading ? "Uploading..." : "Analyze my resume"} <ArrowRight className="w-5 h-5" />
           </button>
         </div>
 

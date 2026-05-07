@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import 'react-circular-progressbar/dist/styles.css';
-import { Target, Zap, Briefcase, ChevronRight, X, ExternalLink, MapPin, Calendar, AlertCircle, Clock, BookOpen, Star, User, Plus } from "lucide-react";
+import { Target, Zap, Briefcase, ChevronRight, X, ExternalLink, MapPin, Calendar, AlertCircle, Clock, BookOpen, Star, User, Plus, Loader2, Check } from "lucide-react";
 import Link from "next/link";
 
-// --- MOCK DATA ---
-const mockData = {
+// --- DEFAULT FALLBACK DATA ---
+const defaultData = {
   healthScore: {
     total: 78,
     formatting: 15,
@@ -45,6 +45,26 @@ const mockData = {
     { id: "2", title: "Full Stack Developer", company: "Vercel", location: "Remote", posted: "5 days ago", match_score: 88, stale: false, missing_skills: [{ skill: "Rust", severity: "important", hours: 20 }] },
     { id: "3", title: "Backend Engineer", company: "Meta", location: "Menlo Park, CA (On-site)", posted: "16 days ago", match_score: 82, stale: true, missing_skills: [{ skill: "System Design", severity: "critical", hours: 30 }] }
   ]
+  ]
+};
+
+// Map backend agent result format to our UI format
+const mapBackendData = (backend: any) => {
+  return {
+    healthScore: backend.health_score,
+    strengths: {
+      top_strengths: backend.agent_result?.skills_data?.top_strengths || [],
+      elevator_pitch: backend.agent_result?.skills_data?.elevator_pitch || "No pitch generated.",
+    },
+    roles: backend.agent_result?.roles_data?.suggested_roles || [],
+    skills: {
+      confirmed_high: backend.agent_result?.skills_data?.confirmed_high || [],
+      confirmed_med: backend.agent_result?.skills_data?.confirmed_med || [],
+      inferred: backend.agent_result?.skills_data?.inferred || [],
+      missing: backend.agent_result?.skills_data?.missing || [],
+    },
+    jobs: backend.jobs || [],
+  };
 };
 
 // --- COMPONENTS ---
@@ -69,6 +89,34 @@ export default function ResultsDashboard() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [data, setData] = useState(defaultData);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const taskId = params.get("taskId");
+
+    if (!taskId) {
+      // Use fallback mock data if no taskId
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchResult = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/resume/${taskId}`);
+        const result = await res.json();
+        if (result.success && result.data?.data) {
+           setData(mapBackendData(result.data.data));
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchResult();
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -107,6 +155,13 @@ export default function ResultsDashboard() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-6 pt-12">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+            <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
+            <p>Loading your results...</p>
+          </div>
+        ) : (
+          <>
         <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
           
           {/* Card 1: Health Score */}
@@ -115,10 +170,10 @@ export default function ResultsDashboard() {
             <div className="flex justify-center mb-8">
               <div className="w-36 h-36">
                 <CircularProgressbar 
-                  value={mockData.healthScore.total} 
-                  text={`${mockData.healthScore.total}`}
+                  value={data.healthScore.total} 
+                  text={`${data.healthScore.total}`}
                   styles={buildStyles({
-                    pathColor: mockData.healthScore.total >= 80 ? '#10B981' : mockData.healthScore.total >= 60 ? '#F59E0B' : '#EF4444',
+                    pathColor: data.healthScore.total >= 80 ? '#10B981' : data.healthScore.total >= 60 ? '#F59E0B' : '#EF4444',
                     textColor: '#fff',
                     trailColor: '#2a2a35',
                     textSize: '24px',
@@ -128,16 +183,16 @@ export default function ResultsDashboard() {
               </div>
             </div>
             <div className="space-y-1 mb-6">
-              <ScoreBar label="Formatting" score={mockData.healthScore.formatting} />
-              <ScoreBar label="Keyword Density" score={mockData.healthScore.keyword_density} />
-              <ScoreBar label="Impact (Quantified)" score={mockData.healthScore.quantified_impact} />
-              <ScoreBar label="ATS Compatibility" score={mockData.healthScore.ats_compatibility} />
-              <ScoreBar label="Readability" score={mockData.healthScore.readability} />
+              <ScoreBar label="Formatting" score={data.healthScore.formatting} />
+              <ScoreBar label="Keyword Density" score={data.healthScore.keyword_density} />
+              <ScoreBar label="Impact (Quantified)" score={data.healthScore.quantified_impact} />
+              <ScoreBar label="ATS Compatibility" score={data.healthScore.ats_compatibility} />
+              <ScoreBar label="Readability" score={data.healthScore.readability} />
             </div>
             <div>
               <p className="text-sm font-medium text-danger mb-2">Fix these:</p>
               <div className="flex flex-col gap-2">
-                {mockData.healthScore.flags.map((flag, i) => (
+                {data.healthScore.flags.map((flag, i) => (
                   <div key={i} className="flex items-start gap-2 text-xs bg-danger/10 border border-danger/20 text-danger-light p-2 rounded-md">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>{flag}</span>
@@ -151,7 +206,7 @@ export default function ResultsDashboard() {
           <motion.div variants={itemVariants} className="glow-card p-6 flex flex-col">
             <h3 className="text-lg font-medium mb-6">Your Strengths</h3>
             <div className="flex flex-col gap-4 flex-1">
-              {mockData.strengths.top_strengths.map((s, i) => (
+              {data.strengths.top_strengths.map((s, i) => (
                 <div key={i} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
                     <Zap className="w-4 h-4 text-accent" />
@@ -169,7 +224,7 @@ export default function ResultsDashboard() {
               ))}
             </div>
             <div className="mt-6 p-4 rounded-xl bg-surface border border-gray-800 italic text-sm text-gray-300">
-              "{mockData.strengths.elevator_pitch}"
+              "{data.strengths.elevator_pitch}"
             </div>
           </motion.div>
 
@@ -177,7 +232,7 @@ export default function ResultsDashboard() {
           <motion.div variants={itemVariants} className="glow-card p-6 flex flex-col">
             <h3 className="text-lg font-medium mb-6">Target Roles</h3>
             <div className="flex flex-col gap-3">
-              {mockData.roles.map((r, i) => (
+              {data.roles.map((r, i) => (
                 <div key={i} className="flex items-center gap-4 p-3 rounded-lg hover:bg-surface cursor-pointer transition-colors group">
                   <div className="w-6 text-center font-mono text-gray-500 group-hover:text-accent">#{i+1}</div>
                   <div className="flex-1">
@@ -207,22 +262,22 @@ export default function ResultsDashboard() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            {mockData.skills.confirmed_high.map(s => (
+            {data.skills.confirmed_high.map(s => (
               <motion.div key={s} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="px-3 py-1.5 rounded-full bg-accent text-white text-sm font-medium">
                 {s}
               </motion.div>
             ))}
-            {mockData.skills.confirmed_med.map(s => (
+            {data.skills.confirmed_med.map(s => (
               <motion.div key={s} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="px-3 py-1.5 rounded-full border border-accent text-accent-light text-sm font-medium">
                 {s}
               </motion.div>
             ))}
-            {mockData.skills.inferred.map(s => (
+            {data.skills.inferred.map(s => (
               <motion.div key={s} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="px-3 py-1.5 rounded-full border border-dashed border-gray-600 text-gray-400 text-sm">
                 {s}
               </motion.div>
             ))}
-            {mockData.skills.missing.map(s => (
+            {data.skills.missing.map(s => (
               <motion.div key={s} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="px-3 py-1.5 rounded-full border border-danger/50 text-danger-light text-sm flex items-center gap-1 cursor-help relative group">
                 <Plus className="w-3 h-3" /> {s}
                 <div className="absolute bottom-full mb-2 hidden group-hover:block w-max bg-gray-900 text-xs p-2 rounded z-10 border border-gray-700">
@@ -238,7 +293,7 @@ export default function ResultsDashboard() {
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xl font-medium flex items-center gap-2">
               Jobs matched for you
-              <span className="bg-accent/20 text-accent text-xs font-semibold px-2 py-0.5 rounded-full">{mockData.jobs.length}</span>
+              <span className="bg-accent/20 text-accent text-xs font-semibold px-2 py-0.5 rounded-full">{data.jobs.length}</span>
             </h3>
             <div className="flex gap-2">
               <button className="px-3 py-1 text-xs rounded-full bg-surface border border-gray-700 hover:bg-gray-800">All</button>
@@ -248,7 +303,7 @@ export default function ResultsDashboard() {
           </div>
 
           <div className="flex flex-col gap-4">
-            {mockData.jobs.map((job, index) => (
+            {data.jobs.map((job, index) => (
               <motion.div 
                 key={job.id}
                 initial={{ opacity: 0, x: 20 }}
@@ -339,7 +394,8 @@ export default function ResultsDashboard() {
             ))}
           </div>
         </motion.div>
-
+        </>
+        )}
       </main>
 
       {/* Section D: Battle Plan Drawer */}

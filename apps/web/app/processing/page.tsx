@@ -19,20 +19,63 @@ export default function Processing() {
   ];
 
   useEffect(() => {
-    let current = 0;
-    const interval = setInterval(() => {
-      current++;
-      if (current <= steps.length) {
-        setCurrentStep(current - 1);
-        setProgress((current / steps.length) * 100);
-      }
-      if (current === steps.length) {
-        clearInterval(interval);
-        setTimeout(() => {
-          router.push("/results/demo-user");
-        }, 1500);
+    const params = new URLSearchParams(window.location.search);
+    const taskId = params.get("taskId");
+    const userId = params.get("userId") || "demo-user";
+
+    if (!taskId) {
+      let current = 0;
+      const interval = setInterval(() => {
+        current++;
+        if (current <= steps.length) {
+          setCurrentStep(current - 1);
+          setProgress((current / steps.length) * 100);
+        }
+        if (current === steps.length) {
+          clearInterval(interval);
+          setTimeout(() => {
+            router.push(`/results/${userId}`);
+          }, 1500);
+        }
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/resume/${taskId}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          const status = data.data.status;
+          const prog = data.data.progress;
+          const stepName = data.data.step;
+          
+          if (prog > progress) setProgress(prog);
+          
+          const stepIndex = steps.findIndex(s => s.id === stepName);
+          if (stepIndex !== -1) {
+            setCurrentStep(stepIndex);
+          }
+          
+          if (status === "complete") {
+            setCurrentStep(steps.length);
+            setProgress(100);
+            clearInterval(interval);
+            setTimeout(() => {
+              router.push(`/results/${userId}?taskId=${taskId}`);
+            }, 1500);
+          } else if (status === "failed") {
+            clearInterval(interval);
+            alert("Processing failed: " + data.data.error);
+            router.push("/");
+          }
+        }
+      } catch (e) {
+        console.error("Polling error", e);
       }
     }, 2000);
+
     return () => clearInterval(interval);
   }, [router]);
 
