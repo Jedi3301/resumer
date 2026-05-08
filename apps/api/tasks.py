@@ -1,9 +1,6 @@
 from celery_app import celery_app
 from services.parser import parse_resume
 from services.health_score import compute_health_score
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../packages'))
 from agents.resume_agent import run_resume_agent
 import asyncio
 
