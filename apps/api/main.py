@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,9 +15,15 @@ from services.redis_url import get_redis_url
 
 app = FastAPI(title="Job Hunt Copilot API", version="0.1.0")
 
+_raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "https://resumer-fronend.onrender.com,http://localhost:3000"
+)
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
