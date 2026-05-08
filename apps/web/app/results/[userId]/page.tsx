@@ -67,6 +67,25 @@ const mapBackendData = (backend: any) => {
   };
 };
 
+// Map backend agent result format to our UI format
+const mapBackendData = (backend: any) => {
+  return {
+    healthScore: backend.health_score,
+    strengths: {
+      top_strengths: backend.agent_result?.skills_data?.top_strengths || [],
+      elevator_pitch: backend.agent_result?.skills_data?.elevator_pitch || "No pitch generated.",
+    },
+    roles: backend.agent_result?.roles_data?.suggested_roles || [],
+    skills: {
+      confirmed_high: backend.agent_result?.skills_data?.confirmed_high || [],
+      confirmed_med: backend.agent_result?.skills_data?.confirmed_med || [],
+      inferred: backend.agent_result?.skills_data?.inferred || [],
+      missing: backend.agent_result?.skills_data?.missing || [],
+    },
+    jobs: backend.jobs || [],
+  };
+};
+
 // --- COMPONENTS ---
 const ScoreBar = ({ label, score }: { label: string, score: number }) => (
   <div className="flex flex-col gap-1 mb-3">
