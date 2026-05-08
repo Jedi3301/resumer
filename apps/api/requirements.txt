@@ -19,3 +19,4 @@ python-multipart==0.0.9
 pytz==2024.1
 langgraph==0.0.38
 langchain-core==0.1.45
+pydantic-settings==2.2.1

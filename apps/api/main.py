@@ -30,6 +30,10 @@ def build_response(success: bool, data: any = None, error: str = None):
         "timestamp": datetime.now(pytz.utc).isoformat()
     }
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/api/health")
 async def health_check():
     return build_response(success=True, data={"status": "healthy"})
@@ -110,3 +114,9 @@ async def get_job_gap(job_id: str, req: GapRequest):
             "message": "Job recommender and gap analysis are temporarily disabled."
         }
     )
+
+if __name__ == "__main__":
+    import uvicorn
+    import os
+    PORT = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=PORT)
