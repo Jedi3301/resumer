@@ -45,26 +45,6 @@ const defaultData = {
     { id: "2", title: "Full Stack Developer", company: "Vercel", location: "Remote", posted: "5 days ago", match_score: 88, stale: false, missing_skills: [{ skill: "Rust", severity: "important", hours: 20 }] },
     { id: "3", title: "Backend Engineer", company: "Meta", location: "Menlo Park, CA (On-site)", posted: "16 days ago", match_score: 82, stale: true, missing_skills: [{ skill: "System Design", severity: "critical", hours: 30 }] }
   ]
-  ]
-};
-
-// Map backend agent result format to our UI format
-const mapBackendData = (backend: any) => {
-  return {
-    healthScore: backend.health_score,
-    strengths: {
-      top_strengths: backend.agent_result?.skills_data?.top_strengths || [],
-      elevator_pitch: backend.agent_result?.skills_data?.elevator_pitch || "No pitch generated.",
-    },
-    roles: backend.agent_result?.roles_data?.suggested_roles || [],
-    skills: {
-      confirmed_high: backend.agent_result?.skills_data?.confirmed_high || [],
-      confirmed_med: backend.agent_result?.skills_data?.confirmed_med || [],
-      inferred: backend.agent_result?.skills_data?.inferred || [],
-      missing: backend.agent_result?.skills_data?.missing || [],
-    },
-    jobs: backend.jobs || [],
-  };
 };
 
 // Map backend agent result format to our UI format
@@ -123,7 +103,7 @@ export default function ResultsDashboard() {
 
     const fetchResult = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/resume/${taskId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resume/${taskId}`);
         const result = await res.json();
         if (result.success && result.data?.data) {
            setData(mapBackendData(result.data.data));

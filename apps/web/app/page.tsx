@@ -63,7 +63,7 @@ export default function Home() {
       formData.append("user_id", userId);
       formData.append("goal_profile", JSON.stringify(profile));
 
-      const res = await fetch("http://localhost:8000/api/resume/upload", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resume/upload`, {
         method: "POST",
         body: formData,
       });

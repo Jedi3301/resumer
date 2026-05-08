@@ -43,7 +43,7 @@ export default function Processing() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/resume/${taskId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/resume/${taskId}`);
         const data = await res.json();
         
         if (data.success) {
