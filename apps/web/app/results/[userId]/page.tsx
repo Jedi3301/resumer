@@ -223,7 +223,7 @@ export default function ResultsDashboard() {
               ))}
             </div>
             <div className="mt-6 p-4 rounded-xl bg-surface border border-gray-800 italic text-sm text-gray-300">
-              "{data.strengths.elevator_pitch}"
+              &ldquo;{data.strengths.elevator_pitch}&rdquo;
             </div>
           </motion.div>
 

@@ -5,18 +5,20 @@ import { motion } from "framer-motion";
 import { CheckCircle, Circle, Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+const STEPS = [
+  { id: "parsing", label: "Parsing resume..." },
+  { id: "scoring", label: "Computing health score..." },
+  { id: "extracting_skills", label: "Extracting skills & strengths..." },
+  { id: "finding_jobs", label: "Finding matched jobs..." },
+  { id: "complete", label: "Building your battle plan..." },
+];
+
 export default function Processing() {
   const router = useRouter();
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   
-  const steps = [
-    { id: "parsing", label: "Parsing resume..." },
-    { id: "scoring", label: "Computing health score..." },
-    { id: "extracting_skills", label: "Extracting skills & strengths..." },
-    { id: "finding_jobs", label: "Finding matched jobs..." },
-    { id: "complete", label: "Building your battle plan..." },
-  ];
+  const steps = STEPS;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
